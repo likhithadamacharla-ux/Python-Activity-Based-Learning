@@ -3,6 +3,7 @@ Roll NO.:26001387
 Branch:CSD
 Section:01
 Selected 10 case studies:-
+
 Case Study 1:University Scholarship Allocation
 
 Case Study 2:Progressive Electricity Billing
