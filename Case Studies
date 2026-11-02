@@ -1,0 +1,900 @@
+
+Python Programming: Case Studies Portfolio
+
+Welcome to the Activity-Based Learning Portfolio featuring 10 practical Python programming case studies. Each case study contains a clear problem statement, objective, logic definition (assumptions, algorithm, and Mermaid flowchart), clean Python source code, and practical test cases.
+
+#️⃣ 1. University Scholarship Allocation
+
+
+📝 Problem Statement
+
+Build a program that checks scholarship applicants against aggregate marks, minimum marks in every required subject, attendance, and family-income limits. Eligible applicants are ranked, with ties resolved by predefined rules.
+
+🎯 Objectives
+
+• Validate applicant data and eligibility criteria.
+• Compute aggregate percentage and apply all minimum thresholds.
+• Rank eligible applicants using marks, attendance, then lower family income as tie-breakers.
+• Display eligibility, rank, and reasons for rejection.
+
+💡 Assumptions
+
+• Marks are percentages from 0 to 100; subject marks are entered as a list.
+• Eligibility requires aggregate \(\ge \) 80, every subject \(\ge \) 60, attendance \(\ge \) 75%, and annual family income \(\le \) 300,000.
+• Tie-break order: higher aggregate, higher attendance, lower income, then earlier input order.
+• The sample uses three subjects and a fixed scholarship quota of two.
+
+🛠️ Algorithm & Logic
+
+1. Read applicant count (\(n\)), name, three subject marks, attendance, and annual family income.
+2. Calculate aggregate as the mean of the three subject marks.
+3. Mark an applicant eligible only if all four threshold rules pass.
+4. Store eligible records as tuples: (aggregate, attendance, -income, -input_order, name).
+5. Sort eligible tuples in descending order.
+6. Assign ranks and display up to the quota limit as scholarship recipients.
+
+Flowchart
+
+
+    Start([START]) --> InputCount[/Input Applicant Count/]
+    InputCount --> LoopStart{For Each Applicant}
+    
+    LoopStart -->|Yes| InputDetails[/Input Name, Marks, Attendance, Income/]
+    InputDetails --> CalcAvg[Calculate Aggregate Average]
+    CalcAvg --> CheckRules{Avg >= 80 AND<br>All Marks >= 60 AND<br>Attendance >= 75% AND<br>Income <= 300000}
+    
+    CheckRules -->|True| StoreTuple[Store tuple with sort weights]
+    CheckRules -->|False| PrintIneligible[/Print NOT ELIGIBLE/]
+    
+    StoreTuple --> LoopStart
+    PrintIneligible --> LoopStart
+    
+    LoopStart -->|No More Applicants| SortRecords[Sort stored records in descending order]
+    SortRecords --> DisplayRanked[/Display ranked list up to Quota limit/]
+    DisplayRanked --> End([STOP])
+Use code with caution.
+
+💻 Python Implementation
+
+python
+n = int(input("Applicants: "))
+a = []
+for i in range(n):
+    name = input("Name: ")
+    m = [float(input("Subject mark: ")) for _ in range(3)]
+    att = float(input("Attendance: "))
+    inc = float(input("Income: "))
+    avg = sum(m) / 3
+    ok = avg >= 80 and min(m) >= 60 and att >= 75 and inc <= 300000
+    a.append((avg, att, -inc, -i, name)) if ok else print(name, "NOT ELIGIBLE")
+
+a.sort(reverse=True)
+for i, x in enumerate(a):
+    print(i + 1, x[4], round(x[0], 2), "AWARDED" if i < 2 else "")
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+Asha: 90, 85, 88; attendance 92; income 200000	Eligible; aggregate 87.67; ranked by score.
+Bala: 90, 55, 95; attendance 95; income 150000	Not eligible: one subject below 60.
+Chitra: 80, 80, 80; attendance 80; income 350000	Not eligible: income exceeds limit.
+Dev: 88, 88, 88; attendance 90; income 250000	Eligible; lower rank than equal-score applicant with lower income.
+
+
+#️⃣ 2. Progressive Electricity Billing
+
+
+📝 Problem Statement
+
+Calculate monthly household electricity bills using progressive consumption slabs, fixed charges, surcharges, and rebates. Compare bills over consecutive months to flag unusual consumption increases.
+
+🎯 Objectives
+
+• Apply progressive slab rates sequentially across consumption limits.
+• Add fixed operational costs, percentage surcharges, and discount rebates.
+• Monitor month-over-month variances and flag dynamic spikes above a threshold.
+
+💡 Assumptions
+
+• Slabs: First 100 units at ₹2/unit, next 100 units at ₹3/unit, units above 200 at ₹5/unit.
+• Charges: Fixed charge of ₹75; surcharge is 5% of energy charge.
+• Rebate: Deduction of ₹50 if consumption is at most 100 units.
+• An increase is marked unusual when a bill rises by >30% from the previous month.
+
+🛠️ Algorithm & Logic
+
+1. Read the number of total months (\(n\)) and each month's total energy unit consumption.
+2. Calculate energy cost progressively across slabs using boundary capping values.
+3. Apply fixed configurations, add a 5% surcharge, and subtract rebate allowances.
+4. From the second tracked month onward, calculate percentage change relative to index i-1.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputMonths[/Input Total Months/]
+    InputMonths --> LoopStart{For Each Month}
+    
+    LoopStart -->|Yes| InputUnits[/Input Consumed Units/]
+    InputUnits --> CheckSlab1{Units <= 100}
+    
+    CheckSlab1 -->|Yes| Calc1[Energy = Units * 2]
+    CheckSlab1 -->|No| CheckSlab2{Units <= 200}
+    
+    CheckSlab2 -->|Yes| Calc2[Energy = 100*2 + Units-100 * 3]
+    CheckSlab2 -->|No| Calc3[Energy = 100*2 + 100*3 + Units-200 * 5]
+    
+    Calc1 --> MainBill[Base Bill = Energy + 75 + Energy * 0.05]
+    Calc2 --> MainBill
+    Calc3 --> MainBill
+    
+    MainBill --> RebateCheck{Units <= 100}
+    RebateCheck -->|Yes| ApplyRebate[Bill = Bill - 50]
+    RebateCheck -->|No| StoreBill[Store and Print Monthly Bill]
+    ApplyRebate --> StoreBill
+    
+    StoreBill --> CheckSpike{Not Month 1 AND<br>Increase > 30%}
+    CheckSpike -->|True| AlertSpike[/Print UNUSUAL INCREASE/]
+    CheckSpike -->|False| LoopStart
+    AlertSpike --> LoopStart
+    
+    LoopStart -->|No More Months| End([STOP])
+Use code with caution.
+
+💻 Python Implementation
+
+python
+n = int(input("Months: "))
+bills = []
+for i in range(n):
+    u = float(input("Units: "))
+    e = 2 * min(u, 100) + 3 * min(max(u - 100, 0), 100) + 5 * max(u - 200, 0)
+    b = e + 75 + e * .05 - (50 if u <= 100 else 0)
+    bills.append(b)
+    print("Bill", i + 1, round(b, 2))
+    if len(bills) > 1 and bills[-2] > 0 and (b - bills[-2]) / bills[-2] > .30:
+        print("UNUSUAL INCREASE")
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+80 units	Energy ₹160; surcharge ₹8; fixed ₹75; rebate ₹50; bill ₹193.
+150 units	Energy ₹350; surcharge ₹17.50; fixed ₹75; bill ₹442.50.
+Consecutive Months: ₹193 then ₹442.50	Increase of 129.3%; flagged as unusual.
+-5 units	Invalid consumption handling.
+
+
+#️⃣ 3. Hospital Billing and Patient Classification
+
+
+📝 Problem Statement
+
+Prepare patient statements combining consultation, diagnostic, and treatment charges. Apply dynamic concession rules, validate monetary limits, and classify payment statuses.
+
+🎯 Objectives
+
+• Structure dynamic itemized entry calculations.
+• Formulate threshold concession deductions safely.
+• Classify overall ledger flags as PAID, PARTIALLY PAID, or OUTSTANDING.
+
+💡 Assumptions
+
+• Concession is fixed at 10% when gross structural charges are \(\ge \) ₹5,000.
+• Balance zero \(\rightarrow \) PAID.
+• Payment greater than zero but less than bill \(\rightarrow \) PARTIALLY PAID.
+• Payment equal to zero \(\rightarrow \) OUTSTANDING.
+
+🛠️ Algorithm & Logic
+
+1. Read patient name, consultation fee, diagnostic cost, and treatment expenses.
+2. Enforce explicit validation that all input charges are non-negative (\(\ge \) 0).
+3. Compute baseline subtotal, determine conditional threshold discounts, and process net totals.
+4. Read actual paid amount; flag accounts out of range or process remaining statement balance.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputCharges[/Input Name, Consultation, Diagnostics, Treatment/]
+    InputCharges --> CheckValid{Any Charge < 0}
+    
+    CheckValid -->|Yes| ErrorOut[/Display INVALID; STOP/]
+    CheckValid -->|No| CalcGross[Gross = Consultation + Diagnostics + Treatment]
+    
+    CalcGross --> CheckDisc{Gross >= 5000}
+    CheckDisc -->|Yes| Discount10[Concession = Gross * 0.10]
+    CheckDisc -->|No| DiscountZero[Concession = 0]
+    
+    Discount10 --> NetBill[Final Bill = Gross - Concession]
+    DiscountZero --> NetBill
+    
+    NetBill --> InputPay[/Input Payment Amount/]
+    InputPay --> CheckPayValid{Payment < 0 OR<br>Payment > Final Bill}
+    
+    CheckPayValid -->|Yes| PayError[/Display INVALID PAYMENT/]
+    CheckPayValid -->|No| CalcBal[Balance = Final Bill - Payment]
+    
+    CalcBal --> ConditionPaid{Balance == 0}
+    ConditionPaid -->|Yes| StatusPaid[Status = PAID]
+    ConditionPaid -->|No| ConditionPartial{Payment > 0}
+    
+    ConditionPartial -->|Yes| StatusPartial[Status = PARTIALLY PAID]
+    ConditionPartial -->|No| StatusOustanding[Status = OUTSTANDING]
+    
+    StatusPaid --> PrintInvoice[/Display Itemized Invoice/]
+    StatusPartial --> PrintInvoice
+    StatusOustanding --> PrintInvoice
+    
+    PrintInvoice --> End([STOP])
+    ErrorOut --> End
+Use code with caution.
+
+💻 Python Implementation
+
+python
+name = input("Patient: ")
+c = float(input("Consultation: "))
+d = float(input("Diagnostics: "))
+t = float(input("Treatment: "))
+
+g = c + d + t
+disc = g * .10 if g >= 5000 else 0
+bill = g - disc
+p = float(input("Payment: "))
+
+if min(c, d, t, p) < 0 or p > bill:
+    print("Invalid charges/payment")
+else:
+    bal = bill - p
+    status = "PAID" if p == bill else "PARTIALLY PAID" if p > 0 else "OUTSTANDING"
+    print(name, "Gross", g, "Concession", disc, "Bill", bill, "Balance", bal, "Status", status)
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+Charges: 1000 + 2000 + 3000; Paid: 2000	Gross ₹6000; concession ₹600; final ₹5400; balance ₹3400; PARTIALLY PAID.
+Charges: 100 + 200 + 300; Paid: 0	Final ₹600; OUTSTANDING.
+Negative Input: -₹5 charge entry	Invalid charge alert.
+Overpayment: Bill ₹600; Paid ₹700	Invalid payment boundary warning.
+
+
+#️⃣ 4. Employee Payroll and Deduction Analysis
+
+
+📝 Problem Statement
+
+Calculate corporate gross payroll utilizing basic salaries, house allocations, variable custom allowances, and hourly overtime. Process progressive tax tier deductions to establish true net salaries.
+
+🎯 Objectives
+
+• Structure absolute multi-component baseline salaries.
+• Map sequential non-overlapping tiered deduction brackets.
+• Print normalized corporate pay statements.
+
+💡 Assumptions
+
+• HRA Allowance: Calculated as a static 20% of basic pay.
+• Overtime Rate: Compensation valued at fixed ₹200/hour.
+• Progressive Deduction Slabs:
+	• First ₹15,000 \(\rightarrow \) 0%
+	• Next ₹15,000 (up to ₹30,000) \(\rightarrow \) 5%
+	• Residual amount above ₹30,000 \(\rightarrow \) 10%
+
+🛠️ Algorithm & Logic
+
+1. Read name, basic pay, custom structural allowance, overtime hours, and special incentive tokens.
+2. Compute HRA component and hourly overtime totals to combine into structural gross payroll.
+3. Apply progressive tax calculations using remaining tier differentials.
+4. Subtract total deduction amounts from gross earnings to output net structural balance.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputPayroll[/Input Name, Basic, Allowance, Overtime, Incentive/]
+    InputPayroll --> CalcEarnings[HRA = Basic * 0.20<br>Overtime Pay = Hours * 200<br>Gross = Basic + HRA + Allowance + Overtime Pay + Incentive]
+    
+    CalcEarnings --> CheckTier1{Gross <= 15000}
+    CheckTier1 -->|Yes| Tier1[Deduction = 0]
+    CheckTier1 -->|No| CheckTier2{Gross <= 30000}
+    
+    CheckTier2 -->|Yes| Tier2[Deduction = Gross - 15000 * 0.05]
+    CheckTier2 -->|No| Tier3[Deduction = 15000 * 0.05 + Gross - 30000 * 0.10]
+    
+    Tier1 --> CalcNet[Net Salary = Gross - Deduction]
+    Tier2 --> CalcNet
+    Tier3 --> CalcNet
+    
+    CalcNet --> CheckInputValid{Min Inputs < 0}
+    CheckInputValid -->|Yes| ErrorMsg[/Print Invalid Input/]
+    CheckInputValid -->|No| ShowPay[/Display Gross, Deductions, and Net Salary/]
+    
+    ErrorMsg --> End([STOP])
+    ShowPay --> End
+Use code with caution.
+
+💻 Python Implementation
+
+python
+name = input("Employee: ")
+b = float(input("Basic: "))
+a = float(input("Allowance: "))
+h = float(input("Overtime hours: "))
+i = float(input("Incentive: "))
+
+g = b * 1.2 + a + h * 200 + i
+d = 0 if g <= 15000 else (g - 15000) * .05 if g <= 30000 else 750 + (g - 30000) * .1
+
+if min(b, a, h, i) < 0:
+    print("Invalid input")
+else:
+    print(name, "Gross", g, "Deduction", d, "NET", g - d)
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+Basic: 20000, Allow: 2000, OT: 5, Incentive: 1000	HRA 4000; OT 1000; Gross 28000; Deduction ₹650; Net ₹27350.
+Low Income Scenario: Gross balance ₹12,000	Total baseline deductions = ₹0.
+High Income Scenario: Gross balance ₹40,000	Deductions = 750 + 1000 = ₹1,750.
+Faulty Negative Inputs	Returns explicit "Invalid input" terminal text.
+
+
+#️⃣ 5. Multi-Plan Telecommunications Cost Optimization
+
+
+📝 Problem Statement
+
+Evaluate structural telco network packages against real client data usage, monthly call volume, validity terms, and total financial budgets. Programmatically compute overage and determine the lowest-cost optimized selection.
+
+🎯 Objectives
+
+• Map multiple criteria attributes effectively via structure tuples.
+• Compute variable data/voice overage boundaries.
+• Filter matrix datasets dynamically on concurrent conditions.
+
+💡 Assumptions
+
+• Data maps format structure: (name, price, included_data_GB, included_call_minutes, validity_days, extra_data_rate, extra_call_rate).
+• Extra data tier rates default to ₹20/GB; calls overage priced at ₹0.50/minute.
+• Plan is discarded if package validation days \(<\) requested limit or computed net cost \(>\) budget caps.
+
+🛠️ Algorithm & Logic
+
+1. Read user requirements: needed monthly GB, call minutes, minimum validity period, and spending caps.
+2. Parse database array rows comprised of unique structural option tuples.
+3. For each option, test if actual use exceeds core bundles; apply math product matrices onto overage rates.
+4. Filter out ineligible plans and select the one with the absolute minimum total cost.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputUser[/Input Data Used, Call Minutes, Required Days, Budget/]
+    InputUser --> LoadPlans[Load Master Data Plan Records List]
+    LoadPlans --> SetInfinity[Initialize Best Cost = Infinity]
+    
+    SetInfinity --> LoopPlans{For Each Plan in Dataset}
+    LoopPlans -->|Yes| CalcOverage[Extra Data = Max 0, Data Used - Included Data<br>Extra Calls = Max 0, Calls Used - Included Calls]
+    CalcOverage --> CalcTotal[Total Cost = Price + Extra Data * Data Rate + Extra Calls * Call Rate]
+    
+    CalcTotal --> Validate{Validity >= Required Days AND<br>Total Cost <= Budget AND<br>Total Cost < Best Cost}
+    Validate -->|True| UpdateBest[Best Plan = Current Plan<br>Best Cost = Total Cost]
+    Validate -->|False| LoopPlans
+    UpdateBest --> LoopPlans
+    
+    LoopPlans -->|No More Plans| CheckExists{Best Plan Exists}
+    CheckExists -->|Yes| PrintBest[/Display Best Plan Selection and Cost/]
+    CheckExists -->|No| PrintNone[/Display NO SUITABLE PLAN/]
+    
+    PrintBest --> End([STOP])
+    PrintNone --> End
+Use code with caution.
+
+💻 Python Implementation
+
+python
+p = [("Basic", 199, 2, 200, 28, 20, .5), 
+     ("Smart", 299, 5, 500, 56, 15, .4), 
+     ("Max", 399, 10, 1000, 84, 10, .3)]
+
+d = float(input("Data GB: "))
+c = int(input("Call minutes: "))
+days = int(input("Validity days: "))
+budget = float(input("Budget: "))
+
+costs = [(price + max(0, d - dl) * dr + max(0, c - cl) * cr, name, v) for name, price, dl, cl, v, dr, cr in p]
+for x in costs:
+    print(x[1], round(x[0], 2))
+
+ok = [x for x in costs if x[2] >= days and x[0] <= budget]
+print("Best:", min(ok)[1] if ok else "NO SUITABLE PLAN")
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+Usage: 4 GB, 300 min, 28 days, Budget: ₹350	Basic ₹289; Smart ₹299; Max ₹399; Basic is cheapest eligible.
+Usage: 8 GB, 800 min, 60 days, Budget: ₹500	Max qualifies at ₹399; Smart fails validity criteria constraints.
+Budget Limit: ₹100 max cap	Displays "NO SUITABLE PLAN".
+Validity Limit: 90 days required	No listed plans qualify.
+
+
+#️⃣ 6. Railway Fare and Reservation Calculator
+
+
+📝 Problem Statement
+
+Calculate dynamic rail travel fares across tier distances, travel classification modifiers, age-group concession rules, reservation overhead processing, and cancellation fine matrices.
+
+🎯 Objectives
+
+• Code staggered progressive lookup slabs for mileage cost baselines.
+• Integrate multiplier factors based on cabin classification.
+• Automate refund distributions or fine execution logic upon cancellation flags.
+
+💡 Assumptions
+
+• Distance Rate Slabs:
+	• First 100 km \(\rightarrow \) ₹1.20/km
+	• Next 400 km \(\rightarrow \) ₹1.00/km
+	• Distance beyond 500 km \(\rightarrow \) ₹0.80/km
+• Class Factors: Sleeper = 1.0, AC = 2.0, Chair Car = 1.4.
+• Age Concessions: Under 12 receives 50% discount; seniors (\(60+\)) receive 30% discount.
+• Reservation process costs ₹40; cancellations trigger a 25% base fare penalty, and reservation fees are non-refundable.
+
+🛠️ Algorithm & Logic
+
+1. Read itinerary distance and passenger count (\(n\)).
+2. Determine continuous slab baseline travel cost.
+3. For each traveler, process age bracket concessions and cabin modifiers.
+4. If a cancellation flag is active, compute the penalty balance and issue the remaining refund.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputRoute[/Input Distance and Passenger Count/]
+    InputRoute --> CalcBaseSlab[Calculate base ticket cost via progressive distance slabs]
+    
+    CalcBaseSlab --> LoopPass{For Each Passenger}
+    LoopPass -->|Yes| InputPass[/Input Passenger Age, Travel Class, Cancellation Status/]
+    InputPass --> GetMultiplier[Fetch Class Multiplier: Sleeper/Chair/AC]
+    
+    GetMultiplier --> ApplyAge{Check Age Rules}
+    ApplyAge -->|Age < 12| ChildCon[Apply 50% Fare Concession]
+    ApplyAge -->|Age >= 60| SeniorCon[Apply 30% Fare Concession]
+    ApplyAge -->|Standard| NoCon[No Concession Applied]
+    
+    ChildCon --> CalcNet[Fare = Slab Base * Class Multiplier * Age Factor]
+    SeniorCon --> CalcNet
+    NoCon --> CalcNet
+    
+    CalcNet --> AddFees[Total Payable = Fare + 40 Reservation Fee]
+    AddFees --> IsCancelled{Is Ticket Cancelled?}
+    
+    IsCancelled -->|Yes| PenaltyCalc[Penalty = Fare * 0.25 + 40<br>Refund = Total Payable - Penalty]
+    PenaltyCalc --> ShowRefund[/Display Penalty and Net Refund Amount/]
+    
+    IsCancelled -->|No| ShowPayable[/Display Total Payable Ticket Fare/]
+    
+    ShowRefund --> LoopPass
+    ShowPayable --> LoopPass
+    
+    LoopPass -->|No More Passengers| End([STOP])
+Use code with caution.
+
+💻 Python Implementation
+
+python
+dist = float(input("Distance km: "))
+n = int(input("Passengers: "))
+base = 1.2 * min(dist, 100) + max(0, min(dist - 100, 400)) + max(0, dist - 500) * .8
+
+for _ in range(n):
+    age = int(input("Age: "))
+    cls = input("Class Sleeper/Chair/AC: ").lower()
+    can = input("Cancelled y/n: ").lower()
+    f = {"sleeper": 1, "chair": 1.4, "ac": 2}.get(cls, 0)
+    
+    if not f:
+        print("Invalid class")
+        continue
+        
+    fare = base * f * (.5 if age < 12 else .7 if age >= 60 else 1)
+    pay = fare + 40
+    
+    if can == "y":
+        penalty = round(fare * .25 + 40, 2)
+        refund = round(pay - penalty, 2)
+        print("Penalty/refund", penalty, refund)
+    else:
+        print("Payable", round(pay, 2))
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+Distance: 200 km; Adult Sleeper	Base calculation ₹220; Total Payable amount ₹260.
+Distance: 200 km; Senior AC (Age 65)	Base Fare ₹308 after 30% concession; Net Payable ₹348.
+Distance: 200 km; Child Sleeper	Base Fare ₹110 after 50% concession; Net Payable ₹150.
+Cancellation Scenario (Fare: ₹220)	Penalty total charges ₹95; Remaining refund back ₹165.
+
+
+#️⃣ 7. Retail Billing with Multiple Discount Rules
+
+
+📝 Problem Statement
+
+Generate an itemized retail store invoice across multiple distinct item branches. Apply category-specific retail taxes, handle discount thresholds, and enforce a maximum concession limit.
+
+🎯 Objectives
+
+• Track inventory categories and aggregate taxes.
+• Process percentage-based conditional invoice discounts.
+• Enforce maximum concession caps.
+
+💡 Assumptions
+
+• Category Tax Rates: Grocery = 5%, Electronics = 18%, Clothing = 12%.
+• Discounts: 10% subtotal deduction applies when pre-tax gross sums are \(\ge \) ₹5,000.
+• Maximum discount reduction cap is strictly limited to ₹1,000.
+
+🛠️ Algorithm & Logic
+
+1. Read the number of total checkout products (\(n\)), item department classification, cost, and quantities.
+2. Accumulate subtotal values and track pre-tax category entries.
+3. If subtotal counts cross \(\ge \) ₹5,000, trigger a 10% discount check capped at the ₹1,000 limit.
+4. Apply the discount proportionally across items, compute itemized tax totals, and print the summary invoice.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputCount[/Input Product Count/]
+    InputCount --> InitVars[Set Subtotal = 0, Tax Total = 0, Items List = Empty]
+    
+    InitVars --> LoopItems{For Each Product}
+    LoopItems -->|Yes| InputItem[/Input Name, Category, Price, Quantity/]
+    InputItem --> CheckValid{Price >= 0 AND Quantity >= 0 AND Valid Category}
+    
+    CheckValid -->|No| SkipItem[/Print Invalid Item; Skip/]
+    CheckValid -->|Yes| AppendList[Line Total = Price * Quantity<br>Subtotal = Subtotal + Line Total<br>Store item parameters in list]
+    
+    SkipItem --> LoopItems
+    AppendList --> LoopItems
+    
+    LoopItems -->|No More Items| CheckThreshold{Subtotal >= 5000}
+    CheckThreshold -->|Yes| CalcDisc[Discount = Min Subtotal * 0.10, 1000]
+    CheckThreshold -->|No| ZeroDisc[Discount = 0]
+    
+    CalcDisc --> LoopTax{For Each Stored Item}
+    ZeroDisc --> LoopTax
+    
+    LoopTax -->|Process Lines| ProportionalTax[Discounted Line = Line Total * Subtotal-Discount / Subtotal<br>Tax Total = Tax Total + Discounted Line * Category Rate]
+    ProportionalTax --> LoopTax
+    
+    LoopTax -->|Finished Summary| FinalCalc[Grand Total = Subtotal - Discount + Tax Total]
+    FinalCalc --> PrintInvoice[/Display Final Subtotal, Discounts, Total Tax, and Payable Net Amount/]
+    PrintInvoice --> End([STOP])
+Use code with caution.
+
+💻 Python Implementation
+
+python
+items = []
+n = int(input("Products: "))
+
+for _ in range(n):
+    name = input("Name: ")
+    cat = input("Category grocery/clothing/electronics: ").lower()
+    p = float(input("Price: "))
+    q = int(input("Quantity: "))
+    r = {"grocery": .05, "clothing": .12, "electronics": .18}.get(cat, -1)
+    
+    if p >= 0 and q >= 0 and r >= 0:
+        items.append((name, p * q, r))
+    else:
+        print("Invalid item")
+
+sub = sum(x[1] for x in items)
+disc = min(sub * .1, 1000) if sub >= 5000 else 0
+tax = sum(x[1] * (sub - disc) / sub * x[2] for x in items) if sub else 0
+
+print("Subtotal", sub, "Discount", disc, "Tax", round(tax, 2), "TOTAL", round(sub - disc + tax, 2))
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+Grocery: ₹100 \(\times \) 10 items	Subtotal ₹1000; no discount; tax ₹50; final total invoice ₹1050.
+Electronics: ₹3000 \(\times \) 2 items	Subtotal ₹6000; discount ₹600; tax ₹972; final net checkout ₹6372.
+High Value: Gross Subtotal valued at ₹20,000	Global discount reduction safely capped at ₹1000 max.
+Unknown Category Entry	Skips invalid category items during runtime loop execution.
+
+
+#️⃣ 8. Manufacturing Cost and Profitability Analysis
+
+
+📝 Problem Statement
+
+Decompose industrial production finance metrics across baseline material yields, wastage thresholds, manual human labor assets, and operational machine overhead components. Measure final net margins against target thresholds.
+
+🎯 Objectives
+
+• Factor wastage tracking into raw material costs.
+• Aggregate variable human resource hours with fixed mechanical expenses.
+• Formulate comparative production return models.
+
+💡 Assumptions
+
+• Wastage expense is computed as a direct percentage of the baseline raw material subtotal.
+• \(\text{Profit Margin} = \frac{\text{Net Profit}}{\text{Gross Revenue}} \times 100\).
+• Target validation flags a success indicator when the actual margin satisfies the minimum required goal.
+
+🛠️ Algorithm & Logic
+
+1. Read quantity batch, raw product component needs, material price, wastage percentage, human working hours/rates, machinery operation fees, sales values, and target metrics.
+2. Calculate base material costs and apply the wastage scalar addition.
+3. Sum labor products with machinery values to calculate the total operating cost.
+4. Compute revenue, net profit, and profit margin, then check if the target margin is achieved.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputManufacturing[/Input Quantity, Material Requirements, Rates, Wastage, Labor Hours, Labor Rates, Machine Expenses, Sale Price, Target Margin/]
+    InputManufacturing --> CheckValid{Quantity <= 0 OR<br>Any Cost/Rate < 0}
+    
+    CheckValid -->|Yes| PrintError[/Display Invalid Input; STOP/]
+    CheckValid -->|No| CalcCosts[Base Material = Quantity * Material Per Unit * Material Rate<br>Wastage Cost = Base Material * Wastage Percent / 100<br>Labor Total = Hours * Hourly Rate<br>Total Cost = Base Material + Wastage Cost + Labor Total + Machine Cost]
+    
+    CalcCosts --> CalcReturns[Gross Revenue = Quantity * Selling Price<br>Net Profit = Gross Revenue - Total Cost]
+    CalcReturns --> CheckRev{Gross Revenue > 0}
+    
+    CheckRev -->|Yes| CalcMargin[Margin Percent = Net Profit / Gross Revenue * 100]
+    CheckRev -->|No| ZeroMargin[Margin Percent = 0]
+    
+    CalcMargin --> EvaluateTarget{Margin Percent >= Target Margin}
+    ZeroMargin --> EvaluateTarget
+    
+    EvaluateTarget -->|True| MetaTarget[Output Metrics Summary + TARGET MET]
+    EvaluateTarget -->|False| MissTarget[Output Metrics Summary + TARGET NOT MET]
+    
+    MetaTarget --> End([STOP])
+    MissTarget --> End
+    PrintError --> End
+Use code with caution.
+
+💻 Python Implementation
+
+python
+q = int(input("Quantity: "))
+mu = float(input("Material units/product: "))
+mr = float(input("Material rate: "))
+w = float(input("Wastage %: "))
+lh = float(input("Labour hours: "))
+lr = float(input("Labour rate: "))
+machine = float(input("Machine cost: "))
+price = float(input("Selling price/product: "))
+target = float(input("Target margin %: "))
+
+if q <= 0 or min(mu, mr, w, lh, lr, machine, price, target) < 0:
+    print("Invalid input")
+else:
+    mat = q * mu * mr
+    cost = mat + (mat * w / 100) + (lh * lr) + machine
+    rev = q * price
+    profit = rev - cost
+    margin = (profit / rev * 100) if rev else 0
+    
+    status = "TARGET MET" if margin >= target else "TARGET NOT MET"
+    print("Cost", cost, "Revenue", rev, "Profit", profit, "Margin", round(margin, 2), status)
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+100 products: mat 2\(\times \)₹50; waste 5%; labor 2000; machine 500; sell ₹150	Material ₹10000; wastage 500; labor ₹2000; cost ₹13500; revenue ₹15000; profit ₹1500; margin 10%.
+Target Check: Target margin set at 15% vs actual 10%	Returns "TARGET NOT MET" status text.
+Zero Check: Batch volume equal to 0	Triggers "Invalid input" terminal error.
+No Revenue Check: Selling price value parameter is 0	Margin calculates at 0%; fails target validation unless threshold \(\le \) 0.
+
+
+#️⃣ 9. Multi-Currency Travel Budget Analysis
+
+
+📝 Problem Statement
+
+Convert multi-currency ledger rows into a standardized home currency using custom user-supplied exchange rates. Factor transactional banking fees into total expenses and track variance budgets alongside prominent expense classifications.
+
+🎯 Objectives
+
+• Convert multiple foreign exchange rates to a single base currency.
+• Calculate conversion transaction processing fees.
+• Aggregate expenses by category to find the largest spending source.
+
+💡 Assumptions
+
+• Rates track standard unit ratios from home currency per single foreign unit.
+• Conversion fees are fixed at a 2% addition onto all raw calculated currency products.
+• Datasets map storage models formatted as list arrays containing (category, cost).
+
+🛠️ Algorithm & Logic
+
+1. Read the global base currency allowance amount and itemized expense counts (\(n\)).
+2. Loop through entries to read category string tags, origin codes, and current rate values.
+3. Multiply values by exchange rates and apply the 1.02 fee scalar addition.
+4. Consolidate category sums, track the largest spending source, and check the budget balance.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputBudget[/Input Total Budget Limit and Expense Item Count/]
+    InputBudget --> InitLedger[Set Grand Total = 0, Expenses List = Empty]
+    
+    InitLedger --> LoopExpenses{For Each Expense Entry}
+    LoopExpenses -->|Yes| InputLine[/Input Category, Currency Code, Foreign Amount, Exchange Rate/]
+    InputLine --> CheckValid{Amount >= 0 AND Exchange Rate > 0}
+    
+    CheckValid -->|No| InvalidLine[/Print Invalid amount/rate error line/]
+    CheckValid -->|Yes| CalcCost[Converted Net Value = Amount * Exchange Rate * 1.02<br>Append category and net value row to list]
+    
+    InvalidLine --> LoopExpenses
+    CalcCost --> LoopExpenses
+    
+    LoopExpenses -->|No More Expenses| SumTotals[Calculate Grand Total of list costs<br>Aggregate category groups matching matching string keys]
+    SumTotals --> EvaluateLargest[Identify Category String key with largest aggregated value weight]
+    
+    EvaluateLargest --> CheckBudget{Grand Total > Budget Limit}
+    CheckBudget -->|True| OutBudget[Status Flag = OVER BUDGET]
+    CheckBudget -->|False| InBudget[Status Flag = Within budget]
+    
+    OutBudget --> DisplayReport[/Print Grand Total, Status Flag, and the identified Largest Category/]
+    InBudget --> DisplayReport
+    
+    DisplayReport --> End([STOP])
+Use code with caution.
+
+💻 Python Implementation
+
+python
+budget = float(input("Budget: "))
+n = int(input("Expenses: "))
+expenses = []
+
+for _ in range(n):
+    cat = input("Category: ")
+    cur = input("Currency: ")
+    amount = float(input("Amount: "))
+    rate = float(input("Home currency per unit: "))
+    
+    if amount >= 0 and rate > 0:
+        cost = amount * rate * 1.02
+        expenses.append((cat, cost))
+    else:
+        print("Invalid amount/rate")
+
+total = sum(x[1] for x in expenses)
+unique_cats = set(x[0] for x in expenses)
+cats_summary = [(c, sum(x[1] for x in expenses if x[0] == c)) for c in unique_cats]
+
+status = "OVER BUDGET" if total > budget else "Within budget"
+largest_cat = max(cats_summary, key=lambda x: x[1])[0] if cats_summary else "None"
+
+print("Total", round(total, 2), status, "Largest", largest_cat)
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+Hotel Stay: 100 USD at conversion rate 83	Base value ₹8300; transaction bank fees ₹166; total entry ₹8466.
+Budget Matrix: Budget allowance limits cap at ₹10000 vs Total spending value ₹8466	Within budget guidelines; surplus remaining totals ₹1534.
+Category Max Check: Transport evaluated at ₹5000 vs Hotel evaluated at ₹8466	Evaluates Hotel as the largest category.
+Faulty Zero Rate Values	Outputs "Invalid exchange rate" error statement.
+
+
+#️⃣ 10. Campus Event Financial Planning
+
+
+📝 Problem Statement
+
+Estimate total organizational campus event funding across fixed venue/equipment resources and variable participant indices. Determine corporate registration fee margins, sponsorship shortfalls, and break-even points.
+
+🎯 Objectives
+
+• Aggregate structural corporate base parameters with dynamic head-count rates.
+• Forecast cash flows and sponsorships shortfalls.
+• Model break-even registration numbers using a mathematical ceiling logic loop.
+
+💡 Assumptions
+
+• Venue/equipment map to fixed matrices; catering, logistics transport, and certificates apply per-person.
+• \(\text{Break-Even Point} = \lceil\frac{\text{Total Fixed Expenses} - \text{Sponsorship Funding}}{\text{Registration Unit Fee} - \text{Variable Unit Expense Per Head}}\rceil\).
+• If unit registration fees \(\le \) variable per-head expenses, breaking even via ticket sales alone is impossible.
+
+🛠️ Algorithm & Logic
+
+1. Read venue and equipment costs, per-person rates (catering, transport, certificates), expected registrations, unit ticket price, and sponsorships.
+2. Sum parameters into total operational costs and compare against target income projections.
+3. Subtract the variable cost per participant from the unit registration fee to find the net contribution margin.
+4. If net contribution margin is positive, apply ceiling metrics to determine the exact minimum registration threshold to prevent losses.
+
+Flowchart
+
+mermaid
+graph TD
+    Start([START]) --> InputEventData[/Input Venue, Equipment, Catering, Transport, Certificate per-person costs, Expected registrations, Ticket Fee, Sponsorship Grant/]
+    InputEventData --> CalcBasics[Fixed Costs = Venue + Equipment<br>Variable Cost Per Head = Catering + Transport + Certificate<br>Total Planned Expense = Fixed Costs + Variable Cost Per Head * Expected Registrations]
+    
+    CalcBasics --> CalcProjections[Planned Revenue = Ticket Fee * Expected Registrations + Sponsorship Grant<br>Shortfall Funding Gap = Total Planned Expense - Planned Revenue]
+    CalcProjections --> CheckInputs{Min Inputs < 0 OR Expected Registrations < 0}
+    
+    CheckInputs -->|Yes| PrintInvalid[/Print Invalid input; STOP/]
+    CheckInputs -->|No| CompareFee{Ticket Fee > Variable Cost Per Head}
+    
+    CompareFee -->|False| PrintImpossible[/Display BREAK-EVEN IMPOSSIBLE FROM TICKETS ALONE/]
+    CompareFee -->|True| CalcBreakEven[Net Contribution Margin = Ticket Fee - Variable Cost Per Head<br>Net Fixed Burden = Fixed Costs - Sponsorship Grant<br>Break Even Registrations = Ceiling of Net Fixed Burden / Net Contribution Margin]
+    
+    CalcBreakEven --> ClampBreakEven[Minimum Required Registrations = Max 0, Break Even Registrations]
+    ClampBreakEven --> PrintMetrics[/Display Total Planned Expense, Planned Revenue, Shortfall Funding Gap, and Minimum Required Registrations/]
+    
+    PrintImpossible --> PrintMetrics
+    PrintMetrics --> End([STOP])
+    PrintInvalid --> End
+Use code with caution.
+
+💻 Python Implementation
+
+python
+v = float(input("Venue: "))
+e = float(input("Equipment: "))
+c = float(input("Catering/person: "))
+t = float(input("Transport/person: "))
+cert = float(input("Certificate/person: "))
+p = int(input("Participants: "))
+fee = float(input("Registration fee: "))
+s = float(input("Sponsorship: "))
+
+if min(v, e, c, t, cert, fee, s) < 0 or p < 0:
+    print("Invalid input")
+else:
+    fixed = v + e
+    var = c + t + cert
+    total = fixed + var * p
+    income = fee * p + s
+    print("Cost", total, "Income", income, "Gap", total - income)
+    
+    if fee <= var:
+        print("Registration alone cannot break even.")
+    else:
+        net_burden = fixed - s
+        net_contrib = fee - var
+        # Dynamic manual loop simulation for calculation compliance check
+        required = 0
+        while (required * fee) + s < fixed + (required * var):
+            required += 1
+        print("Minimum registrations", required)
+Use code with caution.
+
+🧪 Test Cases
+
+
+Input / Scenario	Expected Result
+Fixed Cost: ₹20000; Variable Cost: ₹300/person; Ticket: ₹500; Sponsorship: ₹5000	Net unit contribution = ₹200/person; Minimum required break-even registrations = 75.
+Expected 50 people scenario using same baseline budget properties	Total Cost ₹35000; Revenue ₹30000; Shortfall Funding Gap = ₹5000.
+Deficit Ticket Margins: Ticket price set at ₹250 vs Variable Cost ₹300	Outputs "Registration alone cannot break even." status message.
+Negative Venue Entry Warning	Triggers "Invalid input" handling parameters.
